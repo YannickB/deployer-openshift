@@ -1,0 +1,113 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: node-template
+  annotations:
+    description: "Template for node application"
+    iconClass: icon-nodejs
+    tags: "application,node"
+objects:
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      name: ${APPLICATION_NAME}
+    spec:
+      tags:
+      -
+        name: latest
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: ${APPLICATION_NAME}
+      annotations:
+        description: ${APPLICATION_DESCRIPTION}
+    spec:
+      runPolicy: Serial
+      source:
+        type: Git
+        git:
+          uri: ${SOURCE_REPOSITORY_URL}
+        sourceSecret:
+          name: ${SOURCE_SECRET}
+      strategy:
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: ${SOURCE_IMAGE}:latest
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${APPLICATION_NAME}:latest
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: ${APPLICATION_NAME}
+    spec:
+      template:
+        metadata:
+          labels:
+            name: ${APPLICATION_NAME}
+        spec:
+          containers:
+            - name: ${APPLICATION_NAME}
+              image: ${APPLICATION_NAME} 
+              ports:
+                - containerPort: 3000
+                  protocol: "TCP"
+              env:
+                - name: POSTGRES_HOST
+                  value: mypostgres-server
+              envFrom:
+                - configMapRef:
+                    name: wikicompare-config
+      triggers:
+        - type: "ConfigChange" 
+        - type: "ImageChange"
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - ${APPLICATION_NAME}
+            from:
+              kind: ImageStreamTag
+              name: ${APPLICATION_NAME}:latest
+      replicas: 1
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: ${APPLICATION_NAME}
+    spec:
+      selector:                  
+        name: ${APPLICATION_NAME}
+      ports:
+      - nodePort: 0
+        port: 3000         
+        protocol: TCP
+        targetPort: 3000
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: ${APPLICATION_NAME}
+    spec:
+      host: demo.wikicompare.org
+      to:
+        kind: Service
+        name: ${APPLICATION_NAME}
+parameters:
+  - name: APPLICATION_NAME
+    displayName: Application Name
+    description: The name of your application
+    required: true
+  - name: APPLICATION_DESCRIPTION
+    displayName: Application Description
+    description: The description of your application
+  - name: SOURCE_REPOSITORY_URL 
+    displayName: Source Repository URL 
+    description: The URL of the repository with your application source code 
+    required: true
+  - name: SOURCE_IMAGE
+    displayName: Source Image
+    description: The image to use to build the final image
+    required: true
+  - name: SOURCE_SECRET
+    displayName: Source Secret
+    description: The secret needed to access the source repository 
