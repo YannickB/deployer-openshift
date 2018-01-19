@@ -12,7 +12,7 @@ import (
 	// "io/ioutil"
 	// "crypto/tls"
 	// "log"
-	"encoding/json"
+	// "encoding/json"
 	"strings"
 )
 
@@ -44,16 +44,14 @@ func main() {
 	sourceImage := os.Getenv("SOURCE_IMAGE") // "node-builder"
 
 	options := ""
-	var f map[string]interface{}
-	fmt.Printf("options %s\n", os.Getenv("OPTIONS"))
-	err := json.Unmarshal([]byte(os.Getenv("OPTIONS")), &f)
-	if err != nil {
-		fmt.Printf("Error decoding options %s\n", err)
+	for _, e := range os.Environ() {
+		s := strings.Split(e, "=")
+		k := s[0]
+		v := s[1]
+		if strings.HasPrefix(k, "OPTION_") {
+			options = options + fmt.Sprintf(" %s=\"%s\"", strings.Replace(k, "OPTION_", "", -1), v)
+		}
 	}
-	for k, v := range f {
-		options = options + fmt.Sprintf(" %s=\"%s\"", k, v)
-	}
-	fmt.Printf("options %s\n", options)
 
 	execute("oc", "login", host, "-u", user, "-p", password, "--insecure-skip-tls-verify=True")
 	execute("sh", "-c", fmt.Sprintf("oc process %s APPLICATION_NAME='%s' SOURCE_REPOSITORY='%s' SOURCE_IMAGE='%s' SOURCE_SECRET='%s' %s | oc create -f -", template, application, sourceRepository, sourceImage, sourceSecret, options))
