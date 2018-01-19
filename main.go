@@ -12,6 +12,7 @@ import (
 	// "io/ioutil"
 	// "crypto/tls"
 	// "log"
+	"encoding/json"
 	"strings"
 )
 
@@ -33,20 +34,29 @@ func execute(name string, args ...string) {
 
 func main() {
 
-	host := "console.infra2.wikicompare.org:8443"
-	user := "admin"
-	password := "admin"
-	template := "node-service-template"
-	application := "wikicompare-api"
-	database := "postgres"
-	adminPassword := "MYPASSWORD"
-	sourceRepositoryUrl := "git@gitlab.com:yannick.buron/wikicompare_api.git"
-	sourceImage := "node-builder"
-	sourceSecret := "gitlab"
+	host := os.Getenv("OC_HOST") // "console.infra2.wikicompare.org:8443"
+	user := os.Getenv("OC_USER") // "admin"
+	password := os.Getenv("OC_PASSWORD") // "admin"
+	template := os.Getenv("TEMPLATE") // "node-service-template"
+	application := os.Getenv("APPLICATION") // "wikicompare-api"
+	sourceRepository := os.Getenv("SOURCE_REPOSITORY") // "git@gitlab.com:yannick.buron/wikicompare_api.git"
+	sourceSecret := os.Getenv("SOURCE_SECRET") // "gitlab"
+	sourceImage := os.Getenv("SOURCE_IMAGE") // "node-builder"
 
+	options := ""
+	var f map[string]interface{}
+	fmt.Printf("options %s\n", os.Getenv("OPTIONS"))
+	err := json.Unmarshal([]byte(os.Getenv("OPTIONS")), &f)
+	if err != nil {
+		fmt.Printf("Error decoding options %s\n", err)
+	}
+	for k, v := range f {
+		options = options + fmt.Sprintf(" %s=\"%s\"", k, v)
+	}
+	fmt.Printf("options %s\n", options)
 
 	execute("oc", "login", host, "-u", user, "-p", password, "--insecure-skip-tls-verify=True")
-	execute("sh", "-c", fmt.Sprintf("oc process %s APPLICATION_NAME='%s' POSTGRESQL_HOST='%s' ADMIN_PASSWORD='%s' SOURCE_REPOSITORY_URL='%s' SOURCE_IMAGE='%s' SOURCE_SECRET='%s' | oc create -f -", template, application, database, adminPassword, sourceRepositoryUrl, sourceImage, sourceSecret))
+	execute("sh", "-c", fmt.Sprintf("oc process %s APPLICATION_NAME='%s' SOURCE_REPOSITORY='%s' SOURCE_IMAGE='%s' SOURCE_SECRET='%s' %s | oc create -f -", template, application, sourceRepository, sourceImage, sourceSecret, options))
 
 	// tr := &http.Transport{
     //     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
