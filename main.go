@@ -32,11 +32,7 @@ func execute(name string, args ...string) {
 	// fmt.Printf("%v\n", out.String())
 }
 
-func main() {
-
-	host := os.Getenv("OC_HOST") // "console.infra2.wikicompare.org:8443"
-	user := os.Getenv("OC_USER") // "admin"
-	password := os.Getenv("OC_PASSWORD") // "admin"
+func serviceDeploy() {
 	template := os.Getenv("TEMPLATE") // "node-service-template"
 	application := os.Getenv("APPLICATION") // "wikicompare-api"
 	sourceRepository := os.Getenv("SOURCE_REPOSITORY") // "git@gitlab.com:yannick.buron/wikicompare_api.git"
@@ -52,9 +48,36 @@ func main() {
 			options = options + fmt.Sprintf(" %s=\"%s\"", strings.Replace(k, "OPTION_", "", -1), v)
 		}
 	}
-
-	execute("oc", "login", host, "-u", user, "-p", password, "--insecure-skip-tls-verify=True")
 	execute("sh", "-c", fmt.Sprintf("oc process %s APPLICATION_NAME='%s' SOURCE_REPOSITORY='%s' SOURCE_IMAGE='%s' SOURCE_SECRET='%s' %s | oc create -f -", template, application, sourceRepository, sourceImage, sourceSecret, options))
+
+}
+
+func servicePurge() {
+	application := os.Getenv("APPLICATION") // "wikicompare-api"
+
+	execute("oc", "delete", "route", application)
+	execute("oc", "delete", "service", application)
+	execute("oc", "delete", "deploymentconfig", application)
+}
+
+func main() {
+
+	// host := os.Getenv("OC_HOST") // "console.infra2.wikicompare.org:8443"
+	// user := os.Getenv("OC_USER") // "admin"
+	// password := os.Getenv("OC_PASSWORD") // "admin"
+
+	execute("oc", 
+		"login", os.Getenv("OC_HOST"), 
+		"-u", os.Getenv("OC_USER"),
+		"-p", os.Getenv("OC_PASSWORD"),
+		"--insecure-skip-tls-verify=True")
+
+	switch action := os.Getenv("ACTION"); action {
+	case "serviceDeploy":
+		serviceDeploy()
+	case "servicePurge":
+		servicePurge()
+	}
 
 	// tr := &http.Transport{
     //     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
