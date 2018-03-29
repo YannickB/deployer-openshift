@@ -66,7 +66,7 @@ func main() {
 	// user := os.Getenv("OC_USER") // "admin"
 	// password := os.Getenv("OC_PASSWORD") // "admin"
 
-	execute("./oc", 
+	execute("oc", 
 		"login", os.Getenv("OC_HOST"), 
 		"-u", os.Getenv("OC_USER"),
 		"-p", os.Getenv("OC_PASSWORD"),
