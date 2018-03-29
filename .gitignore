@@ -3,3 +3,4 @@ vendor
 oc
 node_modules
 .serverless
+src/src
