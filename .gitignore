@@ -1,2 +1,5 @@
 wikicompare_infrastructure_openshift
 vendor
+oc
+node_modules
+.serverless

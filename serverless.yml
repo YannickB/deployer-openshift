@@ -1,0 +1,17 @@
+service: inf_openshift
+provider:
+  name: openwhisk
+  ignore_certs: true
+package:
+  include:
+    - oc
+  exclude:
+    - main.go
+    - template.yml
+    - node_modules/**
+functions:
+  inf_openshift:
+    handler: wikicompare_infrastructure_openshift
+    runtime: binary
+plugins:
+  - serverless-openwhisk

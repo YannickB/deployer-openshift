@@ -8,7 +8,7 @@ import (
 	// "bytes"
 	"fmt"
 	// "net/http"
-	// "encoding/json"
+	"encoding/json"
 	// "io/ioutil"
 	// "crypto/tls"
 	// "log"
@@ -66,7 +66,7 @@ func main() {
 	// user := os.Getenv("OC_USER") // "admin"
 	// password := os.Getenv("OC_PASSWORD") // "admin"
 
-	execute("oc", 
+	execute("./oc", 
 		"login", os.Getenv("OC_HOST"), 
 		"-u", os.Getenv("OC_USER"),
 		"-p", os.Getenv("OC_PASSWORD"),
@@ -78,6 +78,11 @@ func main() {
 	case "servicePurge":
 		servicePurge()
 	}
+
+	msg := map[string]string{"msg": ("Hello, test!")}
+	res, _ := json.Marshal(msg)
+	fmt.Println(string(res))
+  
 
 	// tr := &http.Transport{
     //     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
