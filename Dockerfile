@@ -2,6 +2,8 @@ FROM openwhisk/dockerskeleton
 
 ENV GOPATH /opt
 RUN apk add --update wget ca-certificates
+RUN mkdir /.kube
+RUN chmod -R 777 /.kube
 
 RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub \
     && wget -q https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.27-r0/glibc-2.27-r0.apk -O /tmp/glibc.apk \

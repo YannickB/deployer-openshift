@@ -37,7 +37,8 @@ func rawDeploy(args map[string]interface{}) {
 }
 
 func purge(args map[string]interface{}) {
-	for _, record := range args["records"].([]map[string]interface{}) {
+	for _, r := range args["records"].([]interface{}) {
+		record := r.(map[string]interface{})
 		execute("oc", "delete", record["type"].(string), record["name"].(string))
 	}
 }
