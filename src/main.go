@@ -8,7 +8,7 @@ import (
 	// "bytes"
 	"fmt"
 	// "net/http"
-	// "encoding/json"
+	"encoding/json"
 	// "io/ioutil"
 	// "crypto/tls"
 	// "log"
@@ -30,6 +30,17 @@ func execute(name string, args ...string) {
 		// log.Fatal(err)
 	}
 	// fmt.Printf("%v\n", out.String())
+}
+
+func rawDeploy(args map[string]interface{}) {
+	execute("sh", "-c", fmt.Sprintf("echo '%s' | oc create -f -", args["rawContent"].(string)))
+}
+
+func purge(args map[string]interface{}) {
+	for _, r := range args["records"].([]interface{}) {
+		record := r.(map[string]interface{})
+		execute("oc", "delete", record["type"].(string), record["name"].(string))
+	}
 }
 
 func serviceDeploy() {
@@ -66,18 +77,35 @@ func main() {
 	// user := os.Getenv("OC_USER") // "admin"
 	// password := os.Getenv("OC_PASSWORD") // "admin"
 
-	execute("oc", 
-		"login", os.Getenv("OC_HOST"), 
-		"-u", os.Getenv("OC_USER"),
-		"-p", os.Getenv("OC_PASSWORD"),
-		"--insecure-skip-tls-verify=True")
+	arg := os.Args[1]
+	var args map[string]interface{}
+	json.Unmarshal([]byte(arg), &args)
 
-	switch action := os.Getenv("ACTION"); action {
+	fmt.Println(fmt.Sprintf("arg %v", arg))
+	fmt.Println(fmt.Sprintf("args %v", args))
+
+	execute("oc", 
+		"login", args["host"].(string), 
+		"-u", args["user"].(string),
+		"-p", args["password"].(string),
+		"--insecure-skip-tls-verify=True")
+	execute("oc", "project", args["project"].(string))
+
+	switch action := args["action"].(string); action {
+	case "rawDeploy":
+		rawDeploy(args)
+	case "purge":
+		purge(args)
 	case "serviceDeploy":
 		serviceDeploy()
 	case "servicePurge":
 		servicePurge()
 	}
+
+	msg := map[string]string{"msg": ("True")}
+	res, _ := json.Marshal(msg)
+	fmt.Println(string(res))
+  
 
 	// tr := &http.Transport{
     //     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
