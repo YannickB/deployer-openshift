@@ -11,7 +11,7 @@ provider:
 #     - node_modules/**
 functions:
   inf_openshift:
-    handler: yannickburon/inf_openshift:serverless
+    handler: yannickburon/inf_openshift
     runtime: docker
 plugins:
   - serverless-openwhisk
