@@ -1,19 +1,9 @@
-FROM alpine:3.6
-# 1. Use any image as your base image, or "scratch"
-# 2. Add fwatchdog binary via https://github.com/openfaas/faas/releases/
-# 3. Then set fprocess to the process you want to invoke per request - i.e. "cat" or "my_binary"
-
-#ADD https://github.com/openfaas/faas/releases/download/0.7.1/fwatchdog /usr/bin
-#RUN chmod +x /usr/bin/fwatchdog
-
-RUN apk --no-cache add curl \
-    && echo "Pulling watchdog binary from Github." \
-    && curl -sSL https://github.com/openfaas/faas/releases/download/0.7.6/fwatchdog > /usr/bin/fwatchdog \
-    && chmod +x /usr/bin/fwatchdog \
-    && apk del curl --no-cache
+FROM openwhisk/dockerskeleton
 
 ENV GOPATH /opt
 RUN apk add --update wget ca-certificates
+RUN mkdir /.kube
+RUN chmod -R 777 /.kube
 
 RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub \
     && wget -q https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.27-r0/glibc-2.27-r0.apk -O /tmp/glibc.apk \
@@ -32,16 +22,6 @@ RUN wget -q https://dl.google.com/go/go1.9.2.linux-amd64.tar.gz -O /tmp/go.tar.g
     && wget -q https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -O /usr/bin/dep \
     && chmod +x /usr/bin/dep \
     && cd /opt/src \
-    && /usr/local/go/bin/go build -o /opt/exec \
+    && /usr/local/go/bin/go build -o /action/exec \
     && rm -rf /tmp/go.tar.gz /usr/local/go /usr/bin/dep
     # && apk del .bootstrap-deps
-
-RUN chmod +x /opt/exec
-
-# Populate example here - i.e. "cat", "sha512sum" or "node index.js"
-ENV fprocess="/opt/exec"
-# Set to true to see request in function logs
-ENV write_debug="false"
-
-HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
-CMD [ "fwatchdog" ]
