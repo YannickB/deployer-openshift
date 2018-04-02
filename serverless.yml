@@ -1,4 +1,4 @@
-service: inf_openshift
+service: deployer_openshift
 provider:
   name: openwhisk
   ignore_certs: true
@@ -11,7 +11,7 @@ provider:
 #     - node_modules/**
 functions:
   inf_openshift:
-    handler: yannickburon/inf_openshift
+    handler: yannickburon/deployer_openshift
     runtime: docker
 plugins:
   - serverless-openwhisk
